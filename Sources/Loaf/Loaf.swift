@@ -22,7 +22,7 @@ final public class Loaf {
             case left
             case right
         }
-		
+        
         /// Specifies the width of the Loaf. (Default is `.fixed(280)`)
         ///
         /// - fixed: Specified as pixel size. i.e. 280
@@ -52,10 +52,16 @@ final public class Loaf {
         
         /// The position of the icon
         let iconAlignment: IconAlignment
-		
+        
         /// The width of the loaf
         let width: Width
-		
+        
+        /// The width of border
+        let borderWidth: Float
+        
+        /// The Color of border
+        let borderColor: UIColor
+        
         public init(
             backgroundColor: UIColor,
             textColor: UIColor = .white,
@@ -64,7 +70,9 @@ final public class Loaf {
             icon: UIImage? = Icon.info,
             textAlignment: NSTextAlignment = .left,
             iconAlignment: IconAlignment = .left,
-            width: Width = .fixed(280)) {
+            width: Width = .fixed(280),
+            borderWidth: Float = 1.0,
+            borderColor: UIColor = .black) {
             self.backgroundColor = backgroundColor
             self.textColor = textColor
             self.tintColor = tintColor
@@ -73,6 +81,8 @@ final public class Loaf {
             self.textAlignment = textAlignment
             self.iconAlignment = iconAlignment
             self.width = width
+            self.borderWidth = borderWidth
+            self.borderColor = borderColor
         }
     }
     
@@ -172,6 +182,7 @@ final public class Loaf {
         self.presentingDirection = presentingDirection
         self.dismissingDirection = dismissingDirection
         self.sender = sender
+        
     }
     
     /// Show the loaf for a specified duration. (Default is `.average`)
@@ -182,17 +193,17 @@ final public class Loaf {
         self.completionHandler = completionHandler
         LoafManager.shared.queueAndPresent(self)
     }
-	
-	/// Manually dismiss a currently presented Loaf
-	///
-	/// - Parameter animated: Whether the dismissal will be animated
-	public static func dismiss(sender: UIViewController, animated: Bool = true){
-		guard LoafManager.shared.isPresenting else { return }
-		guard let vc = sender.presentedViewController as? LoafViewController else { return }
-		vc.dismiss(animated: animated) {
-			vc.delegate?.loafDidDismiss()
-		}
-	}
+    
+    /// Manually dismiss a currently presented Loaf
+    ///
+    /// - Parameter animated: Whether the dismissal will be animated
+    public static func dismiss(sender: UIViewController, animated: Bool = true){
+        guard LoafManager.shared.isPresenting else { return }
+        guard let vc = sender.presentedViewController as? LoafViewController else { return }
+        vc.dismiss(animated: animated) {
+            vc.delegate?.loafDidDismiss()
+        }
+    }
 }
 
 final fileprivate class LoafManager: LoafDelegate {
@@ -238,12 +249,12 @@ final class LoafViewController: UIViewController {
         self.loaf = toast
         self.transDelegate = Manager(loaf: toast, size: .zero)
         super.init(nibName: nil, bundle: nil)
-		
+        
         var width: CGFloat?
         if case let Loaf.State.custom(style) = loaf.state {
             self.font = style.font
             self.textAlignment = style.textAlignment
-			
+            
             switch style.width {
             case .fixed(let value):
                 width = value
@@ -301,6 +312,8 @@ final class LoafViewController: UIViewController {
             label.textColor = style.textColor
             label.font = style.font
             constrainWithIconAlignment(style.iconAlignment, showsIcon: imageView.image != nil)
+            view.layer.borderColor = style.borderColor.cgColor
+            view.layer.borderWidth = CGFloat(style.borderWidth)
         }
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
@@ -379,4 +392,5 @@ private struct Queue<T> {
         }
     }
 }
+
 
